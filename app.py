@@ -37,9 +37,26 @@ class Subjects(db.Model):
 # getting the teachers
 @app.route('/teachers', methods=["GET"])
 def get_teachers():
+    all_students = Students.query.all()
     all_teachers = Teachers.query.all()
-    # loops through all instances in all_teachers list and assigns each one to a dictionary and add it to teachers list
+    all_subjects = Subjects.query.all()
     teachers = [{'id': teacher.id, 'first_name': teacher.first_name, 'last_name': teacher.last_name, 'age': teacher.age, 'subject': teacher.subject} for teacher in all_teachers]
+    subjects = [{'id': subject.id, 'subject_name': subject.subject} for subject in all_subjects]
+    students = [{'id': student.id, 'first_name': student.first_name, 'last_name': student.last_name, 'age': student.age, 'class': student.subject} for student in all_students]
+
+    # loops thru every teacher and sets the subject key's value to a dict of subject name and students in class
+    for teach in teachers:
+        teacher_subject = teach['subject']
+        students_in_class = []
+        for stu in students:
+            if stu['class'] == teacher_subject:
+                stu_name = f"{stu['first_name']} {stu['first_name']}"
+                students_in_class.append(stu_name)
+        for sub in subjects:
+            if sub['id'] == teacher_subject:
+                teachers_subject = sub['subject_name']
+        teach['subject'] = {'subject': teachers_subject, 'students': students_in_class}
+    
     return jsonify(teachers)
 
 @app.route('/students', methods=["GET"])
