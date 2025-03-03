@@ -8,10 +8,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = (
 )
 db = SQLAlchemy(app)
 
-g_students = None
-g_teachers = None
-g_subjects = None
-
 class Teachers(db.Model):
     __tablename__ = 'teachers'
     id = db.Column(db.Integer, primary_key=True)
@@ -33,17 +29,35 @@ class Subjects(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     subject = db.Column(db.String(50))
 
+# Helper function
+def get_all_data():
+    all_students = Students.query.all()
+    all_teachers = Teachers.query.all()
+    all_subjects = Subjects.query.all()
+    teachers = [{'id': teacher.id, 
+                'first_name': teacher.first_name, 
+                'last_name': teacher.last_name, 
+                'age': teacher.age, 
+                'subject': teacher.subject
+                } for teacher in all_teachers
+                ]
+    students = [{'id': student.id, 
+                'first_name': student.first_name, 
+                'last_name': student.last_name, 
+                'age': student.age, 
+                'class': student.subject
+                } for student in all_students
+                ]
+    subjects = [{'id': subject.id, 
+                'subject_name': subject.subject
+                } for subject in all_subjects
+                ]
+    return teachers, students, subjects
 
 # getting the teachers
 @app.route('/teachers', methods=["GET"])
 def get_teachers():
-    all_students = Students.query.all()
-    all_teachers = Teachers.query.all()
-    all_subjects = Subjects.query.all()
-    teachers = [{'id': teacher.id, 'first_name': teacher.first_name, 'last_name': teacher.last_name, 'age': teacher.age, 'subject': teacher.subject} for teacher in all_teachers]
-    subjects = [{'id': subject.id, 'subject_name': subject.subject} for subject in all_subjects]
-    students = [{'id': student.id, 'first_name': student.first_name, 'last_name': student.last_name, 'age': student.age, 'class': student.subject} for student in all_students]
-
+    teachers, students, subjects = get_all_data()
     # loops thru every teacher and sets the subject key's value to a dict of subject name and students in class
     for teach in teachers:
         teacher_subject = teach['subject']
@@ -61,14 +75,7 @@ def get_teachers():
 
 @app.route('/students', methods=["GET"])
 def get_students():
-    ### Getting the lists of teachers/subjects/students
-    all_students = Students.query.all()
-    all_teachers = Teachers.query.all()
-    all_subjects = Subjects.query.all()
-    teachers = [{'id': teacher.id, 'first_name': teacher.first_name, 'last_name': teacher.last_name, 'age': teacher.age, 'subject': teacher.subject} for teacher in all_teachers]
-    subjects = [{'id': subject.id, 'subject_name': subject.subject} for subject in all_subjects]
-    students = [{'id': student.id, 'first_name': student.first_name, 'last_name': student.last_name, 'age': student.age, 'class': student.subject} for student in all_students]
-    ###
+    teachers, students, subjects = get_all_data()
     # sets the students class value as their subject and teacher
     for student in students:
         stu_class = student['class']                    # sets the current iterations variable 
@@ -83,14 +90,7 @@ def get_students():
 
 @app.route('/subjects', methods=["GET"])
 def get_subjects():
-    # create a list of the subjects, students, and teachers
-    all_subjects = Subjects.query.all()
-    subjects = [{'id': subject.id, 'subject_name': subject.subject} for subject in all_subjects]
-    all_students = Students.query.all()
-    students = [{'id': student.id, 'first_name': student.first_name, 'last_name': student.last_name, 'age': student.age, 'subject': student.subject} for student in all_students]
-    all_teachers = Teachers.query.all()
-    teachers = [{'id': teacher.id, 'first_name': teacher.first_name, 'last_name': teacher.last_name, 'age': teacher.age, 'subject': teacher.subject} for teacher in all_teachers]
-    
+    teachers, students, subjects = get_all_data()
     # create a dictionary for each subject
     math = {'subject': 'Math'}
     science = {'subject': 'Science'}
@@ -110,11 +110,11 @@ def get_subjects():
             history['teacher'] = t_name
         else:
             pe['teacher'] = t_name
-    math['students'] = list(filter(lambda stu : stu['subject'] == 1, students))
-    science['students'] = list(filter(lambda stu : stu['subject'] == 2, students))
-    english['students'] = list(filter(lambda stu : stu['subject'] == 3, students))
-    history['students'] = list(filter(lambda stu : stu['subject'] == 4, students))
-    pe['students'] = list(filter(lambda stu : stu['subject'] == 5, students))
+    math['students'] = list(filter(lambda stu : stu['class'] == 1, students))
+    science['students'] = list(filter(lambda stu : stu['class'] == 2, students))
+    english['students'] = list(filter(lambda stu : stu['class'] == 3, students))
+    history['students'] = list(filter(lambda stu : stu['class'] == 4, students))
+    pe['students'] = list(filter(lambda stu : stu['class'] == 5, students))
     return jsonify([math, science, english, history, pe])
     # loop through both teachers/students list & see if their subject value matches the current subject id
 
